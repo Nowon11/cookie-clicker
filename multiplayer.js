@@ -11,7 +11,7 @@ var script = document.createElement("script");
 script.src = `${hostname}/javascript/jquery.js`;
 document.head.appendChild(script);
 
-// Used to store all values to make storage not overlap with cookie clicker values
+// Multiplayer object
 var multiplayer = {
     startMenu: function() {
         this.clear();
@@ -51,7 +51,6 @@ var multiplayer = {
             if(amount < 0) amount = 0;
             if(amount > Game.cookies) amount = Game.cookies;
             Game.Earn(-amount);
-            // Optionally send donation to server for multiplayer tracking
             console.log(`Donated ${amount} cookies`);
             $("#donateAmount").val(0);
         });
@@ -118,21 +117,13 @@ var multiplayer = {
 // Ensure jQuery + functions loaded before starting
 var waitForJQuery = setInterval(function() {
     if(typeof $ != "undefined" && typeof getCookie != "undefined"){
-        let element = document.getElementById("centerArea");
+        let element = document.getElementById("bottom"); // Push multiplayer UI below main content
         let div = document.createElement("div");
         div.id = "multiplayer";
-        div.style = "text-align:center;background:rgba(0,0,0,1);position:relative;z-index:100;padding-top:20px;padding-bottom:20px";
-        element.insertBefore(div, element.firstChild);
+        div.style = "text-align:center;background:rgba(0,0,0,0.8);position:relative;z-index:100;margin-top:20px;padding:10px";
+        element.appendChild(div); // append instead of insertBefore
         multiplayer.startMenu();
         console.log("Import successful");
         clearInterval(waitForJQuery);
-
-        // R-key toggle
-        document.addEventListener("keydown", e => {
-            if(e.key.toLowerCase() === "r"){
-                let mp = document.getElementById("multiplayer");
-                if(mp) mp.style.display = (mp.style.display === "none") ? "" : "none";
-            }
-        });
     }
 }, 10);
