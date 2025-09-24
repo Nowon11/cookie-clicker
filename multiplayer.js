@@ -61,22 +61,10 @@ var multiplayer = {
         // Debug logging
         console.log("Raw data for", e.username, ":", e);
         
-        // Extract achievements and buildings from the time field
-        let originalTime = parseInt(e.lastUpdate);
-        let achievements = originalTime % 1000; // Get last 3 digits (achievements)
-        let buildings = Math.floor((originalTime % 1000000) / 1000); // Get middle 3 digits (buildings)
-        
-        // Check if this looks like encoded data (very large number) or regular timestamp
-        if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
-          e.achievements = achievements;
-          e.buildings = buildings;
-          e.lastUpdate = Math.floor(originalTime / 1000000); // Get original timestamp
-        } else {
-          // Regular timestamp, no achievements or buildings data
-          e.achievements = 0;
-          e.buildings = 0;
-          e.lastUpdate = originalTime;
-        }
+        // Use achievements and buildings directly from server response if available
+        e.achievements = parseInt(e.achievements) || 0;
+        e.buildings = parseInt(e.buildings) || 0;
+        e.lastUpdate = parseInt(e.lastUpdate);
         
         // Debug logging
         console.log("Processed data for", e.username, ":", {cookies: e.cookies, cookiesPs: e.cookiesPs, buildings: e.buildings, achievements: e.achievements});
@@ -111,9 +99,6 @@ var multiplayer = {
     let achievementsToSend = Game.AchievementsOwned || 0;
     let buildingsToSend = Game.BuildingsOwned || 0;
     
-    // Encode buildings and achievements into the timestamp
-    let encodedTime = currentTime * 1000000 + buildingsToSend * 1000 + achievementsToSend;
-    
     // Debug logging
     console.log("Sending data:", {
       username: Game.bakeryName,
@@ -121,8 +106,7 @@ var multiplayer = {
       cookiesPs: Math.round(cookiesPs),
       achievementsToSend: achievementsToSend,
       buildingsToSend: buildingsToSend,
-      originalTime: currentTime,
-      encodedTime: encodedTime
+      time: currentTime
     });
      
      
@@ -133,7 +117,7 @@ var multiplayer = {
          cookiesPs
        )}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
          multiplayer.room
-       }&type=view&time=${encodedTime}`
+       }&type=view&time=${currentTime}&buildings=${buildingsToSend}&achievements=${achievementsToSend}`
      );
   },
   fakeLive: function () {
