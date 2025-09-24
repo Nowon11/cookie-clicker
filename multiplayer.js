@@ -1,13 +1,7 @@
 // Will get the hostname - console pasteable version
 hostname = "https://www.lschaefer.xyz";
 
-// Will add jquery and another script
-var script = document.createElement("script");
-script.src = `${hostname}/javascript/functions.js`;
-document.head.appendChild(script);
-var script = document.createElement("script");
-script.src = `${hostname}/javascript/jquery.js`;
-document.head.appendChild(script);
+// Self-contained version - no external scripts needed
 
 // Used to store all values to make storage not overlap with cookie clicker values
 var multiplayer = {
