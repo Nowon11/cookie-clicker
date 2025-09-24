@@ -58,27 +58,13 @@ var multiplayer = {
         e.cookies = e.cookies * 10 ** e.powerOfCookies;
         e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
         
-        // Handle buildings and achievements data - prioritize separate fields over encoded time
+        // Handle buildings and achievements data - use separate fields only
         let originalTime = parseInt(e.lastUpdate);
         
-        // First, try to use separate fields if they exist (more reliable)
-        if (e.buildings !== undefined && e.achievements !== undefined) {
-          e.buildings = e.buildings || 0;
-          e.achievements = e.achievements || 0;
-          e.lastUpdate = originalTime;
-        } else if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
-          // Extract from encoded time format only if separate fields aren't available
-          let achievements = originalTime % 1000; // Get last 3 digits (achievements)
-          let buildings = Math.floor((originalTime % 1000000) / 1000); // Get middle 3 digits (buildings)
-          e.achievements = achievements;
-          e.buildings = buildings;
-          e.lastUpdate = Math.floor(originalTime / 1000000); // Get original timestamp
-        } else {
-          // Regular timestamp, use defaults
-          e.buildings = e.buildings || 0;
-          e.achievements = e.achievements || 0;
-          e.lastUpdate = originalTime;
-        }
+        // Use separate fields from server response, with safe defaults
+        e.buildings = parseInt(e.buildings) || 0;
+        e.achievements = parseInt(e.achievements) || 0;
+        e.lastUpdate = originalTime;
         
         return e;
       });
@@ -108,7 +94,6 @@ var multiplayer = {
      let currentTime = Date.now();
      let achievementsToSend = Game.AchievementsOwned || 0;
      let buildingsToSend = Game.BuildingsOwned || 0;
-     let encodedTime = currentTime * 1000000 + buildingsToSend * 1000 + achievementsToSend;
      
      
      ajax.send(
@@ -118,7 +103,7 @@ var multiplayer = {
          cookiesPs
        )}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
          multiplayer.room
-       }&type=view&time=${encodedTime}&buildings=${buildingsToSend}&achievements=${achievementsToSend}`
+       }&type=view&time=${currentTime}&buildings=${buildingsToSend}&achievements=${achievementsToSend}`
      );
   },
   fakeLive: function () {
