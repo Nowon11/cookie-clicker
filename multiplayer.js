@@ -58,17 +58,23 @@ var multiplayer = {
         e.cookies = e.cookies * 10 ** e.powerOfCookies;
         e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
         
-        // Handle buildings and achievements data
+        // Handle buildings and achievements data - prioritize separate fields over encoded time
         let originalTime = parseInt(e.lastUpdate);
-        if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
-          // Extract from encoded time format
+        
+        // First, try to use separate fields if they exist (more reliable)
+        if (e.buildings !== undefined && e.achievements !== undefined) {
+          e.buildings = e.buildings || 0;
+          e.achievements = e.achievements || 0;
+          e.lastUpdate = originalTime;
+        } else if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
+          // Extract from encoded time format only if separate fields aren't available
           let achievements = originalTime % 1000; // Get last 3 digits (achievements)
           let buildings = Math.floor((originalTime % 1000000) / 1000); // Get middle 3 digits (buildings)
           e.achievements = achievements;
           e.buildings = buildings;
           e.lastUpdate = Math.floor(originalTime / 1000000); // Get original timestamp
         } else {
-          // Use separate fields if available, otherwise default to 0
+          // Regular timestamp, use defaults
           e.buildings = e.buildings || 0;
           e.achievements = e.achievements || 0;
           e.lastUpdate = originalTime;
@@ -138,12 +144,6 @@ var multiplayer = {
             achievements = Game.AchievementsOwned;
             age = 0;
           }
-        }
-        
-        // Always update your own buildings and achievements to current value
-        if (username == Game.bakeryName) {
-          buildings = Game.BuildingsOwned;
-          achievements = Game.AchievementsOwned;
         }
         html += `<tr style='${style}'><td>${username}</td><td>${cookies}</td><td>${cookiesPs}</td><td>${buildings}</td><td>${achievements}</td><td>${humanReadableTime(
           age
