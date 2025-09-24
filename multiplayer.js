@@ -168,7 +168,7 @@ var waitForJQuery = setInterval(function () {
     
     // Add keyboard shortcut to toggle multiplayer UI visibility
     document.addEventListener('keydown', function(event) {
-      if (event.key.toLowerCase() === 'r' && !event.ctrlKey && !event.altKey && !event.metaKey) {
+      if (event.key === '\\' && !event.ctrlKey && !event.altKey && !event.metaKey) {
         let multiplayerDiv = document.getElementById("multiplayer");
         if (multiplayerDiv) {
           if (multiplayerDiv.style.display === 'none') {
