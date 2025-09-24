@@ -55,20 +55,28 @@ var multiplayer = {
     ajax.onload = function () {
        let jsonData = JSON.parse(this.response);
       multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
+        e.cookies = e.cookies * 10 ** e.powerOfCookies;
+        e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
+        
         // Debug logging
         console.log("Raw data for", e.username, ":", e);
         
-        // Extract achievements from cookies (achievements * 1000 was added to cookies)
-        let achievements = Math.floor(e.cookies / 1000);
-        e.cookies = (e.cookies - (achievements * 1000)) * 10 ** e.powerOfCookies;
-        e.achievements = achievements;
+        // Extract achievements and buildings from the time field
+        let originalTime = parseInt(e.lastUpdate);
+        let achievements = originalTime % 1000; // Get last 3 digits (achievements)
+        let buildings = Math.floor((originalTime % 1000000) / 1000); // Get middle 3 digits (buildings)
         
-        // Extract buildings from cookiesPs (buildings * 1000 was added to cookiesPs)
-        let buildings = Math.floor(e.cookiesPs / 1000);
-        e.cookiesPs = (e.cookiesPs - (buildings * 1000)) * 10 ** e.powerOfCookiesPs;
-        e.buildings = buildings;
-        
-        e.lastUpdate = parseInt(e.lastUpdate);
+        // Check if this looks like encoded data (very large number) or regular timestamp
+        if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
+          e.achievements = achievements;
+          e.buildings = buildings;
+          e.lastUpdate = Math.floor(originalTime / 1000000); // Get original timestamp
+        } else {
+          // Regular timestamp, no achievements or buildings data
+          e.achievements = 0;
+          e.buildings = 0;
+          e.lastUpdate = originalTime;
+        }
         
         // Debug logging
         console.log("Processed data for", e.username, ":", {cookies: e.cookies, cookiesPs: e.cookiesPs, buildings: e.buildings, achievements: e.achievements});
@@ -99,33 +107,33 @@ var multiplayer = {
       cookiesPs /= 10;
     }
     
-    // Encode achievements into cookies and buildings into cookiesPs
+    let currentTime = Date.now();
     let achievementsToSend = Game.AchievementsOwned || 0;
     let buildingsToSend = Game.BuildingsOwned || 0;
     
-    // Encode achievements into cookies (add achievements * 1000 to cookies)
-    let encodedCookies = Math.round(cookies) + (achievementsToSend * 1000);
-    // Encode buildings into cookiesPs (add buildings * 1000 to cookiesPs)
-    let encodedCookiesPs = Math.round(cookiesPs) + (buildingsToSend * 1000);
+    // Encode buildings and achievements into the timestamp
+    let encodedTime = currentTime * 1000000 + buildingsToSend * 1000 + achievementsToSend;
     
     // Debug logging
     console.log("Sending data:", {
       username: Game.bakeryName,
-      originalCookies: Math.round(cookies),
-      originalCookiesPs: Math.round(cookiesPs),
+      cookies: Math.round(cookies),
+      cookiesPs: Math.round(cookiesPs),
       achievementsToSend: achievementsToSend,
       buildingsToSend: buildingsToSend,
-      encodedCookies: encodedCookies,
-      encodedCookiesPs: encodedCookiesPs
+      originalTime: currentTime,
+      encodedTime: encodedTime
     });
-    
-    let currentTime = Date.now();
      
      
      ajax.send(
-       `username=${Game.bakeryName}&cookies=${encodedCookies}&powerOfCookies=${powerOfCookies}&cookiesPs=${encodedCookiesPs}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
+       `username=${Game.bakeryName}&cookies=${Math.round(
+         cookies
+       )}&powerOfCookies=${powerOfCookies}&cookiesPs=${Math.round(
+         cookiesPs
+       )}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
          multiplayer.room
-       }&type=view&time=${currentTime}`
+       }&type=view&time=${encodedTime}`
      );
   },
   fakeLive: function () {
