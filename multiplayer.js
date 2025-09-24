@@ -58,17 +58,20 @@ var multiplayer = {
          e.cookies = e.cookies * 10 ** e.powerOfCookies;
          e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
          
-         // Extract achievements from the time field
+         // Extract achievements and buildings from the time field
          let originalTime = parseInt(e.lastUpdate);
-         let achievements = originalTime % 1000; // Get last 3 digits
+         let achievements = originalTime % 1000; // Get last 3 digits (achievements)
+         let buildings = Math.floor((originalTime % 1000000) / 1000); // Get middle 3 digits (buildings)
          
          // Check if this looks like encoded data (very large number) or regular timestamp
          if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
            e.achievements = achievements;
-           e.lastUpdate = Math.floor(originalTime / 1000); // Get original timestamp
+           e.buildings = buildings;
+           e.lastUpdate = Math.floor(originalTime / 1000000); // Get original timestamp
          } else {
-           // Regular timestamp, no achievements data
+           // Regular timestamp, no achievements or buildings data
            e.achievements = 0;
+           e.buildings = 0;
            e.lastUpdate = originalTime;
          }
          
@@ -99,7 +102,8 @@ var multiplayer = {
     }
      let currentTime = Date.now();
      let achievementsToSend = Game.AchievementsOwned;
-     let encodedTime = currentTime * 1000 + achievementsToSend;
+     let buildingsToSend = Game.BuildingsOwned;
+     let encodedTime = currentTime * 1000000 + buildingsToSend * 1000 + achievementsToSend;
      
      
      ajax.send(
@@ -114,13 +118,14 @@ var multiplayer = {
   },
   fakeLive: function () {
     // Will make it look like you are live
-    let html = `<tr><th>Username</th><th>Cookies</th><th>Per Second</th><th>Achievements</th><th>Last Update</th></tr>`;
+    let html = `<tr><th>Username</th><th>Cookies</th><th>Per Second</th><th>Buildings</th><th>Achievements</th><th>Last Update</th></tr>`;
     if (multiplayer.internalCookies) {
       multiplayer.internalCookies.forEach((data) => {
         let username = data["username"]; // Stores the username for that user
         let age = (Date.now() - parseInt(data["lastUpdate"])) / 1000; // Stores the age of the information
         let cookies = Beautify(data["cookies"] + data["cookiesPs"] * age); // Uses the age to make it look more like it is live
         let cookiesPs = Beautify(data["cookiesPs"]); // Stores the amount of cookies per second
+        let buildings = data["buildings"] || 0; // Stores the number of buildings
         let achievements = data["achievements"] || 0; // Stores the number of achievements
         let style = "";
         let button = "";
@@ -130,16 +135,18 @@ var multiplayer = {
           if (username == Game.bakeryName) {
             cookies = Beautify(Game.cookies);
             cookiesPs = Beautify(Game.cookiesPs);
+            buildings = Game.BuildingsOwned;
             achievements = Game.AchievementsOwned;
             age = 0;
           }
         }
         
-        // Always update your own achievements to current value
+        // Always update your own buildings and achievements to current value
         if (username == Game.bakeryName) {
+          buildings = Game.BuildingsOwned;
           achievements = Game.AchievementsOwned;
         }
-        html += `<tr style='${style}'><td>${username}</td><td>${cookies}</td><td>${cookiesPs}</td><td>${achievements}</td><td>${humanReadableTime(
+        html += `<tr style='${style}'><td>${username}</td><td>${cookies}</td><td>${cookiesPs}</td><td>${buildings}</td><td>${achievements}</td><td>${humanReadableTime(
           age
         )}</td><td>${button}</td></tr>`;
       });
