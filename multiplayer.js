@@ -85,7 +85,7 @@ var multiplayer = {
         });
       }
     };
-    ajax.open("POST", `${this.hostname}/api/cookieClicker.php`);
+    ajax.open("POST", `${multiplayer.hostname}/api/cookieClicker.php`);
     ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     // Sets the power variables correctly
     let powerOfCookies = 0;
