@@ -15,7 +15,7 @@ var multiplayer = {
     // Will generate the startup menu
     this.clear();
     $("#multiplayer")
-      .append(`<h1 class='title' style='font-size:150%'>Welcome to the Online Cookie Clicker Addon</h1><br>
+      .append(`<h1 class='title' style='font-size:150%'>Cookie Clicker Multiplayer Mod</h1><br>
         <p>You will see everyone's number of cookies, cookies per second, and achievements that are in the same room.</p>
         <label for="room">Room ID:</label>
         <input type="text" id="room" name="room"/>
