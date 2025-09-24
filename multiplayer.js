@@ -55,16 +55,17 @@ var multiplayer = {
     ajax.onload = function () {
        let jsonData = JSON.parse(this.response);
       multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
-        e.cookies = e.cookies * 10 ** e.powerOfCookies;
-        e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
+        // Extract achievements from cookies (achievements * 1000 was added to cookies)
+        let achievements = Math.floor(e.cookies / 1000);
+        e.cookies = (e.cookies - (achievements * 1000)) * 10 ** e.powerOfCookies;
+        e.achievements = achievements;
         
-        // Handle buildings and achievements data - use separate fields only
-        let originalTime = parseInt(e.lastUpdate);
+        // Extract buildings from cookiesPs (buildings * 1000 was added to cookiesPs)
+        let buildings = Math.floor(e.cookiesPs / 1000);
+        e.cookiesPs = (e.cookiesPs - (buildings * 1000)) * 10 ** e.powerOfCookiesPs;
+        e.buildings = buildings;
         
-        // Use separate fields from server response, with safe defaults
-        e.buildings = parseInt(e.buildings) || 0;
-        e.achievements = parseInt(e.achievements) || 0;
-        e.lastUpdate = originalTime;
+        e.lastUpdate = parseInt(e.lastUpdate);
         
         return e;
       });
@@ -78,7 +79,7 @@ var multiplayer = {
     };
     ajax.open("POST", `${this.hostname}/api/cookieClicker.php`);
     ajax.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    // Sets the power variables correctly
+    // Sets the power variables correctly and encodes achievements/buildings
     let powerOfCookies = 0;
     let cookies = Game.cookies;
     while (cookies >= 1000000) {
@@ -91,19 +92,23 @@ var multiplayer = {
       powerOfCookiesPs++;
       cookiesPs /= 10;
     }
-     let currentTime = Date.now();
-     let achievementsToSend = Game.AchievementsOwned || 0;
-     let buildingsToSend = Game.BuildingsOwned || 0;
+    
+    // Encode achievements into cookies and buildings into cookiesPs
+    let achievementsToSend = Game.AchievementsOwned || 0;
+    let buildingsToSend = Game.BuildingsOwned || 0;
+    
+    // Encode achievements into cookies (add achievements * 1000 to cookies)
+    let encodedCookies = Math.round(cookies) + (achievementsToSend * 1000);
+    // Encode buildings into cookiesPs (add buildings * 1000 to cookiesPs)
+    let encodedCookiesPs = Math.round(cookiesPs) + (buildingsToSend * 1000);
+    
+    let currentTime = Date.now();
      
      
      ajax.send(
-       `username=${Game.bakeryName}&cookies=${Math.round(
-         cookies
-       )}&powerOfCookies=${powerOfCookies}&cookiesPs=${Math.round(
-         cookiesPs
-       )}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
+       `username=${Game.bakeryName}&cookies=${encodedCookies}&powerOfCookies=${powerOfCookies}&cookiesPs=${encodedCookiesPs}&powerOfCookiesPs=${powerOfCookiesPs}&room=${
          multiplayer.room
-       }&type=view&time=${currentTime}&buildings=${buildingsToSend}&achievements=${achievementsToSend}`
+       }&type=view&time=${currentTime}`
      );
   },
   fakeLive: function () {
