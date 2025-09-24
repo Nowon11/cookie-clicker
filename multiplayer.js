@@ -1,12 +1,24 @@
 // Will get the hostname - console pasteable version
-hostname = "https://www.lschaefer.xyz";
+hostname = "https://www.lschaefer.xyz"; // fallback hostname
+// try to detect if we're running from github raw
+if (window.location.hostname === 'raw.githubusercontent.com') {
+  hostname = "https://www.lschaefer.xyz"; // use your actual server
+}
 
 // Will add jquery and another script
+// use cdn for jquery to ensure it loads
+if (typeof $ === 'undefined') {
+  var script = document.createElement("script");
+  script.src = "https://code.jquery.com/jquery-3.6.0.min.js";
+  document.head.appendChild(script);
+}
+
+// try to load functions.js from hostname, but don't fail if it doesn't exist
 var script = document.createElement("script");
 script.src = `${hostname}/javascript/functions.js`;
-document.head.appendChild(script);
-var script = document.createElement("script");
-script.src = `${hostname}/javascript/jquery.js`;
+script.onerror = function() {
+  console.log("functions.js not available, continuing without it");
+};
 document.head.appendChild(script);
 
 // Used to store all values to make storage not overlap with cookie clicker values
@@ -163,7 +175,7 @@ var multiplayer = {
 
 // This will make sure that Jquery is loaded before starting everything
 var waitForJQuery = setInterval(function () {
-  if (typeof $ != "undefined" && typeof getCookie != "undefined") {
+  if (typeof $ != "undefined" && (typeof getCookie != "undefined" || typeof Game != "undefined")) {
     let element = document.getElementById("centerArea");
     // Will create the multiplayer element
     let div = document.createElement("div");
