@@ -55,6 +55,9 @@ var multiplayer = {
     ajax.onload = function () {
        let jsonData = JSON.parse(this.response);
       multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
+        // Debug logging
+        console.log("Raw data for", e.username, ":", e);
+        
         // Extract achievements from cookies (achievements * 1000 was added to cookies)
         let achievements = Math.floor(e.cookies / 1000);
         e.cookies = (e.cookies - (achievements * 1000)) * 10 ** e.powerOfCookies;
@@ -66,6 +69,9 @@ var multiplayer = {
         e.buildings = buildings;
         
         e.lastUpdate = parseInt(e.lastUpdate);
+        
+        // Debug logging
+        console.log("Processed data for", e.username, ":", {cookies: e.cookies, cookiesPs: e.cookiesPs, buildings: e.buildings, achievements: e.achievements});
         
         return e;
       });
@@ -101,6 +107,17 @@ var multiplayer = {
     let encodedCookies = Math.round(cookies) + (achievementsToSend * 1000);
     // Encode buildings into cookiesPs (add buildings * 1000 to cookiesPs)
     let encodedCookiesPs = Math.round(cookiesPs) + (buildingsToSend * 1000);
+    
+    // Debug logging
+    console.log("Sending data:", {
+      username: Game.bakeryName,
+      originalCookies: Math.round(cookies),
+      originalCookiesPs: Math.round(cookiesPs),
+      achievementsToSend: achievementsToSend,
+      buildingsToSend: buildingsToSend,
+      encodedCookies: encodedCookies,
+      encodedCookiesPs: encodedCookiesPs
+    });
     
     let currentTime = Date.now();
      
