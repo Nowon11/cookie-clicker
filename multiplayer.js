@@ -2,7 +2,7 @@
 hostname = "https://www.lschaefer.xyz";
 
 // Self-contained version - no external scripts needed
-console.log("Mod \"Multiplayer\" added.")
+
 // Used to store all values to make storage not overlap with cookie clicker values
 var multiplayer = {
   startMenu: function () {
