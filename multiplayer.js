@@ -54,7 +54,6 @@ var multiplayer = {
     let ajax = new XMLHttpRequest();
     ajax.onload = function () {
        let jsonData = JSON.parse(this.response);
-       console.log("Total players in response:", jsonData["leaderboard"].length);
        multiplayer.internalCookies = jsonData["leaderboard"].map((e) => {
          e.cookies = e.cookies * 10 ** e.powerOfCookies;
          e.cookiesPs = e.cookiesPs * 10 ** e.powerOfCookiesPs;
@@ -67,12 +66,10 @@ var multiplayer = {
          if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
            e.achievements = achievements;
            e.lastUpdate = Math.floor(originalTime / 1000); // Get original timestamp
-           console.log("Player:", e.username, "ENCODED - Original:", originalTime, "Achievements extracted:", achievements, "Restored time:", e.lastUpdate, "Actual Game.AchievementsOwned:", Game.AchievementsOwned);
          } else {
            // Regular timestamp, no achievements data
            e.achievements = 0;
            e.lastUpdate = originalTime;
-           console.log("Player:", e.username, "REGULAR - Time:", originalTime, "Achievements: 0 (no data)");
          }
          
          return e;
@@ -104,7 +101,6 @@ var multiplayer = {
      let achievementsToSend = Game.AchievementsOwned;
      let encodedTime = currentTime * 1000 + achievementsToSend;
      
-     console.log("Sending - Username:", Game.bakeryName, "Time:", currentTime, "Achievements:", achievementsToSend, "Encoded:", encodedTime);
      
      ajax.send(
        `username=${Game.bakeryName}&cookies=${Math.round(
@@ -169,7 +165,6 @@ var waitForJQuery = setInterval(function () {
       "text-align:center;background:rgba(0,0,0,1);position:relative;z-index:100;padding-top:20px;padding-bottom:20px";
     element.insertBefore(div, element.firstChild);
     multiplayer.startMenu();
-    console.log("Import succesful");
     
     // Add keyboard shortcut to toggle multiplayer UI visibility
     document.addEventListener('keydown', function(event) {
@@ -178,10 +173,8 @@ var waitForJQuery = setInterval(function () {
         if (multiplayerDiv) {
           if (multiplayerDiv.style.display === 'none') {
             multiplayerDiv.style.display = '';
-            console.log("Multiplayer UI shown");
           } else {
             multiplayerDiv.style.display = 'none';
-            console.log("Multiplayer UI hidden");
           }
         }
       }
