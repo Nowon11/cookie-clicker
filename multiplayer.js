@@ -37,7 +37,7 @@ var multiplayer = {
     $("#multiplayer")
       .append(`<h1 class='title' style='font-size:150%'>Welcome to ${this.room}</h1><br>
         <p>If table stops updating leave and join the room.</p>
-        <table id='leaderboard' style='width:100%;'></table>
+        <table id='leaderboard' style='width:100%; table-layout:fixed;'></table>
         <a id='leave' class='option'>Leave room</a>`);
     this.intervalFetch = setInterval(this.fetchData, 2000);
     this.intervalFakeLive = setInterval(this.fakeLive, 30);
@@ -114,7 +114,7 @@ var multiplayer = {
   },
   fakeLive: function () {
     // Will make it look like you are live
-    let html = `<tr><th>Username</th><th>Cookies</th><th>Per Second</th><th>Achievements</th><th>Last Update</th></tr>`;
+    let html = `<tr><th style='width:20%'>Username</th><th style='width:25%'>Cookies</th><th style='width:20%'>Per Second</th><th style='width:15%'>Achievements</th><th style='width:20%'>Last Update</th></tr>`;
     if (multiplayer.internalCookies) {
       multiplayer.internalCookies.forEach((data) => {
         let username = data["username"]; // Stores the username for that user
@@ -139,7 +139,7 @@ var multiplayer = {
         if (username == Game.bakeryName) {
           achievements = Game.AchievementsOwned;
         }
-        html += `<tr style='${style}'><td>${username}</td><td>${cookies}</td><td>${cookiesPs}</td><td>${achievements}</td><td>${humanReadableTime(
+        html += `<tr style='${style}'><td style='width:20%; text-align:left'>${username}</td><td style='width:25%; text-align:right'>${cookies}</td><td style='width:20%; text-align:right'>${cookiesPs}</td><td style='width:15%; text-align:center'>${achievements}</td><td style='width:20%; text-align:center'>${humanReadableTime(
           age
         )}</td><td>${button}</td></tr>`;
       });
