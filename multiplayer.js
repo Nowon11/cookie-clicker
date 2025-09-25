@@ -63,7 +63,7 @@ var multiplayer = {
          let achievements = originalTime % 1000; // Get last 3 digits
          
          // Check if this looks like encoded data (very large number) or regular timestamp
-         if (originalTime > 1000000000000) { // If it's a very large number, it's probably encoded
+         if (originalTime > 1000000000000000) { // If it's a very large number, it's probably encoded
            e.achievements = achievements;
            e.lastUpdate = Math.floor(originalTime / 1000); // Get original timestamp
          } else {
@@ -118,7 +118,7 @@ var multiplayer = {
     if (multiplayer.internalCookies) {
       multiplayer.internalCookies.forEach((data) => {
         let username = data["username"]; // Stores the username for that user
-        let age = (Date.now() - parseInt(data["lastUpdate"])) / 1000; // Stores the age of the information
+        let age = Math.max(0, (Date.now() - parseInt(data["lastUpdate"])) / 1000); // Stores the age of the information, ensure non-negative
         let cookies = Beautify(data["cookies"] + data["cookiesPs"] * age); // Uses the age to make it look more like it is live
         let cookiesPs = Beautify(data["cookiesPs"]); // Stores the amount of cookies per second
         let achievements = data["achievements"] || 0; // Stores the number of achievements
